@@ -8,10 +8,11 @@ import (
 
 	"project6/cache"
 	"project6/handlers"
+	"project6/sessions"
 )
 
 func main() {
-	sessions.init() // Инициализация сессий
+	sessions.Init() // Инициализация сессий
 
 	http.HandleFunc("/register", handlers.Register)
 	http.HandleFunc("/login", handlers.Login)

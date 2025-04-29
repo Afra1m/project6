@@ -14,8 +14,7 @@ type Data struct {
 	Message   string `json:"message"`
 }
 
-func CachedData(w http.ResponseWriter, r *http.Request) {
-	// проверка сессии
+func CacheData(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session")
 	if err != nil {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
@@ -27,24 +26,17 @@ func CachedData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// если кэш валиден, отдаем его
-	if cache.IsCacheValid() {
-		data, err := cache.ReadCache()
-		if err == nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(data)
-			return
+	data, err := cache.GetData(func() any {
+		return Data{
+			Timestamp: time.Now().Format(time.RFC3339),
+			Message:   "Это сгенерированные данные!",
 		}
+	})
+	if err != nil {
+		http.Error(w, "error reading cache", http.StatusInternalServerError)
+		return
 	}
-
-	// если кэша нет или он устарел
-	newData := Data{
-		Timestamp: time.Now().Format(time.RFC3339),
-		Message:   "Это сгенерированные данные!",
-	}
-	response, _ := json.Marshal(newData)
-	cache.WriteCache(response)
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(response)
+	json.NewEncoder(w).Encode(data)
 }
